@@ -16,12 +16,14 @@ public class HideAndSeek : ModuleRules
 			"InputCore",
 			"AIModule",
 			"StateTreeModule",
-			"SmartObjectsModule"
+			"SmartObjectsModule",
+			"GameplayTags",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
-			"GameplayStateTreeModule"
+			"GameplayStateTreeModule",
+			"NavigationSystem",
 		});
 
 		// Uncomment if you are using Slate UI
