@@ -24,6 +24,12 @@ struct HIDEANDSEEK_API FStateTreeClaimHidingSlotInstanceData
 
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", Units = "cm"))
 	float MaxGoalOffsetZ = 50.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", Units = "cm"))
+	float CoverMargin = 15.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", Units = "s"))
+	float VisibilityDebugDuration = 0.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Output")
 	FVector GoalLocation = FVector::ZeroVector;

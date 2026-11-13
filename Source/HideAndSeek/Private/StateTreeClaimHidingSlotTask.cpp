@@ -13,6 +13,11 @@
 #include "StateTreeAsyncExecutionContext.h"
 #include "StateTreeExecutionContext.h"
 #include "StructUtils/StructView.h"
+#include "Camera/PlayerCameraManager.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/PlayerController.h"
+#include "HidingVisibility.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogHiderSmartObject, Log, All)
 
@@ -41,8 +46,8 @@ EStateTreeRunStatus FStateTreeClaimHidingSlotTask::EnterState(FStateTreeExecutio
 		return EStateTreeRunStatus::Failed;
 	}
 
-	APawn* Pawn = Cast<APawn>(Actor);
-	AAIController* AIController = Pawn ? Cast<AAIController>(Pawn->GetController()) : nullptr;
+	ACharacter* Character = Cast<ACharacter>(Actor);
+	AAIController* AIController = Character ? Cast<AAIController>(Character->GetController()) : nullptr;
 
 	UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(Actor->GetWorld());
 
@@ -52,6 +57,21 @@ EStateTreeRunStatus FStateTreeClaimHidingSlotTask::EnterState(FStateTreeExecutio
 		       *GetNameSafe(Actor));
 		return EStateTreeRunStatus::Failed;
 	}
+
+	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(Actor, 0);
+
+	if (!IsValid(PlayerController) || !PlayerController->IsLocalController() ||
+		!IsValid(PlayerController->PlayerCameraManager) ||
+		PlayerController->PlayerCameraManager->GetCameraCacheTime() <= 0.0f)
+	{
+		UE_LOG(LogHiderSmartObject, Verbose, TEXT("%s: waiting for the player camera."),
+		       *GetNameSafe(Actor));
+		return EStateTreeRunStatus::Failed;
+	}
+
+	FVector CameraLocation;
+	FRotator CameraRotation;
+	PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
 
 	if (!FMath::IsFinite(Data.SearchRadius) || Data.SearchRadius <= 0.0f)
 	{
@@ -63,6 +83,13 @@ EStateTreeRunStatus FStateTreeClaimHidingSlotTask::EnterState(FStateTreeExecutio
 		|| Data.MaxGoalOffsetZ < 0.0f)
 	{
 		UE_LOG(LogHiderSmartObject, Warning, TEXT("Selection failed: goal offsets must be finite and non-negative."));
+		return EStateTreeRunStatus::Failed;
+	}
+
+	if (!FMath::IsFinite(Data.CoverMargin) || !FMath::IsFinite(Data.VisibilityDebugDuration) ||
+		Data.CoverMargin < 0.0f || Data.VisibilityDebugDuration < 0.0f)
+	{
+		UE_LOG(LogHiderSmartObject, Warning, TEXT("Selection failed: cover parameters are invalid."));
 		return EStateTreeRunStatus::Failed;
 	}
 
@@ -168,10 +195,23 @@ EStateTreeRunStatus FStateTreeClaimHidingSlotTask::EnterState(FStateTreeExecutio
 		if (OffsetXYSquared > FMath::Square(static_cast<double>(Data.MaxGoalOffsetXY)) || OffsetZ > Data.MaxGoalOffsetZ)
 		{
 			UE_LOG(LogHiderSmartObject, Verbose, TEXT("%s: rejected %s: path endpoint offset XY=%.1f Z=%.1f."),
-				*GetNameSafe(Actor),
-				*LexToString(Candidate.SlotHandle),
-				FMath::Sqrt(OffsetXYSquared),
-				OffsetZ);
+			       *GetNameSafe(Actor),
+			       *LexToString(Candidate.SlotHandle),
+			       FMath::Sqrt(OffsetXYSquared),
+			       OffsetZ);
+			continue;
+		}
+
+		if (!HideAndSeek::IsCrouchedLocationOccluded(
+			Character,
+			NavigableGoal,
+			CameraLocation,
+			Data.CoverMargin,
+			Data.VisibilityDebugDuration))
+		{
+			UE_LOG(LogHiderSmartObject, Verbose, TEXT("%s: rejected %s: crouched cover test failed."),
+			       *GetNameSafe(Actor),
+			       *LexToString(Candidate.SlotHandle));
 			continue;
 		}
 
@@ -221,7 +261,7 @@ EStateTreeRunStatus FStateTreeClaimHidingSlotTask::EnterState(FStateTreeExecutio
 	}
 
 
-	UE_LOG(LogHiderSmartObject, Verbose, TEXT("%s: no reachable claimable hiding slot within %.0f cm."),
+	UE_LOG(LogHiderSmartObject, Verbose, TEXT("%s: no free, reachable and claimable hiding slot within %.0f cm."),
 	       *GetNameSafe(Actor), Data.SearchRadius);
 
 	return EStateTreeRunStatus::Failed;
