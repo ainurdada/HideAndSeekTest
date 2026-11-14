@@ -13,6 +13,11 @@
 bool HideAndSeek::IsCrouchedLocationOccluded(const ACharacter* Character, const FVector& FeetLocation,
                                              const FVector& CameraLocation, float HorizontalMargin, float DebugDuration)
 {
+	if (!IsValid(Character))
+	{
+		return false;
+	}
+
 	UWorld* World = Character->GetWorld();
 	const UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
 	const UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
@@ -79,6 +84,6 @@ bool HideAndSeek::IsCrouchedLocationOccluded(const ACharacter* Character, const 
 				Color, false, DebugDuration);
 		}
 	}
-	
+
 	return bAllOccluded;
 }
