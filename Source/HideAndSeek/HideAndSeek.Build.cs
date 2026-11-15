@@ -18,12 +18,14 @@ public class HideAndSeek : ModuleRules
 			"StateTreeModule",
 			"SmartObjectsModule",
 			"GameplayTags",
+			"GameplayAbilities",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
 			"GameplayStateTreeModule",
 			"NavigationSystem",
+			"GameplayTasks",
 		});
 
 		// Uncomment if you are using Slate UI
