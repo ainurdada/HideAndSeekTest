@@ -157,6 +157,8 @@ bool UHiderAbilitySystemComponent::ApplyRevealMarker()
 	       *GetNameSafe(GetOwner()),
 	       bWasRevealed ? TEXT("refreshed") : TEXT("applied"),
 	       Spec.Data->GetDuration());
+	
+	OnRevealApplied.Broadcast();
 
 	return true;
 }

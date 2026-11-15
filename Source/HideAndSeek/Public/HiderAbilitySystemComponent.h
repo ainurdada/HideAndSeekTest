@@ -7,6 +7,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHiderRevealMarkerVisibilityChanged, bool, bRevealed);
 
+DECLARE_MULTICAST_DELEGATE(FOnHiderRevealApplied);
+
 UCLASS(ClassGroup = (HideAndSeek), meta = (BlueprintSpawnableComponent, DisplayName = "Hider Ability System"))
 class HIDEANDSEEK_API UHiderAbilitySystemComponent : public UAbilitySystemComponent
 {
@@ -27,10 +29,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "HideAndSeek|Debug")
 	void DebugApplyRevealMarker();
-	
+
 	UPROPERTY(BlueprintAssignable, Category = "HideAndSeek|Reveal")
 	FOnHiderRevealMarkerVisibilityChanged OnRevealMarkerVisibilityChanged;
-	
+
+	FOnHiderRevealApplied OnRevealApplied;
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "HideAndSeek|Reveal")
 	TSubclassOf<UGameplayEffect> RevealMarkerEffect;

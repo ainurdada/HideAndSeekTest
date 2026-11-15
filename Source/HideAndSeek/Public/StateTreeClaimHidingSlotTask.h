@@ -16,15 +16,24 @@ struct HIDEANDSEEK_API FStateTreeClaimHidingSlotInstanceData
 	UPROPERTY(EditAnywhere, Category = "Context")
 	TObjectPtr<AActor> Actor = nullptr;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	bool bHasExcludedLocation = false;
+
+	UPROPERTY(EditAnywhere, Category = "Input")
+	FVector ExcludedLocation = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = 1.0f, Units = "cm"))
+	float MinDistanceFromExcludedLocation = 200.0f;
+
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "1.0", Units = "cm"))
 	float SearchRadius = 2000.0f;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", Units = "cm"))
 	float MaxGoalOffsetXY = 10.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", Units = "cm"))
 	float MaxGoalOffsetZ = 50.0f;
-	
+
 	UPROPERTY(EditAnywhere, Category = "Parameter", meta = (ClampMin = "0.0", Units = "cm"))
 	float CoverMargin = 15.0f;
 

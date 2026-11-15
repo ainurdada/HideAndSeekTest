@@ -73,6 +73,15 @@ EStateTreeRunStatus FStateTreeClaimHidingSlotTask::EnterState(FStateTreeExecutio
 	FRotator CameraRotation;
 	PlayerController->GetPlayerViewPoint(CameraLocation, CameraRotation);
 
+	if (!FMath::IsFinite(Data.MinDistanceFromExcludedLocation) || Data.MinDistanceFromExcludedLocation <= 0.0f
+		|| (Data.bHasExcludedLocation && Data.ExcludedLocation.ContainsNaN()))
+	{
+		UE_LOG(LogHiderSmartObject, Warning, TEXT("%s: Invalid excluded location settings."),
+		       *GetNameSafe(Actor));
+
+		return EStateTreeRunStatus::Failed;
+	}
+
 	if (!FMath::IsFinite(Data.SearchRadius) || Data.SearchRadius <= 0.0f)
 	{
 		UE_LOG(LogHiderSmartObject, Warning, TEXT("Claim failed: SearchRadius must be positive."));
@@ -134,6 +143,16 @@ EStateTreeRunStatus FStateTreeClaimHidingSlotTask::EnterState(FStateTreeExecutio
 
 		if (!Location.IsSet())
 		{
+			continue;
+		}
+
+		if (Data.bHasExcludedLocation && FVector::DistSquared2D(Location.GetValue(), Data.ExcludedLocation)
+			< FMath::Square(static_cast<double>(Data.MinDistanceFromExcludedLocation)))
+		{
+			UE_LOG(LogHiderSmartObject, Verbose, TEXT("%s: rejected %s: too close to revealed location."),
+			       *GetNameSafe(Actor),
+			       *LexToString(Result.SlotHandle));
+
 			continue;
 		}
 
