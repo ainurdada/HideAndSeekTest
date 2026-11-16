@@ -17,6 +17,7 @@ enum class EHideAndSeekRoundPhase : uint8
 };
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHideAndSeekRoundPhaseChanged, EHideAndSeekRoundPhase, EHideAndSeekRoundPhase);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHideAndSeekRoundPresentationChanged);
 
 UCLASS()
 class HIDEANDSEEK_API AHideAndSeekGameMode : public AGameModeBase
@@ -55,6 +56,9 @@ public:
 	void RequestRestartRound();
 
 	FOnHideAndSeekRoundPhaseChanged OnRoundPhaseChanged;
+	
+	UPROPERTY(BlueprintAssignable, Category = "HideAndSeek|Round")
+	FOnHideAndSeekRoundPresentationChanged OnRoundPresentationChanged;
 
 protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

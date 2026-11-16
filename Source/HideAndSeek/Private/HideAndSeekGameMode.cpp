@@ -130,6 +130,7 @@ bool AHideAndSeekGameMode::NotifyHiderFound(AActor* Hider)
 	}
 	else
 	{
+		OnRoundPresentationChanged.Broadcast();
 		RefreshRoundDebug();
 	}
 
@@ -205,6 +206,8 @@ void AHideAndSeekGameMode::SetRoundPhase(EHideAndSeekRoundPhase NewPhase)
 	       *UEnum::GetValueAsString(RoundPhase));
 
 	OnRoundPhaseChanged.Broadcast(PreviousPhase, RoundPhase);
+	OnRoundPresentationChanged.Broadcast();
+
 	RefreshRoundDebug();
 }
 
@@ -249,7 +252,7 @@ void AHideAndSeekGameMode::RefreshRoundDebug()
 	}
 
 	Message += TEXT(" | R: Restart round");
-	
+
 	GEngine->AddOnScreenDebugMessage(static_cast<uint64>(GetUniqueID()), DebugRefreshInterval * 2.0f,
 	                                 Color, Message);
 }
