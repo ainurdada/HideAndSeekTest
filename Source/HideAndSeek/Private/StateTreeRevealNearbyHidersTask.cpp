@@ -52,6 +52,8 @@ EStateTreeRunStatus FStateTreeRevealNearbyHidersTask::EnterState(
 
 		return EStateTreeRunStatus::Succeeded;
 	}
+	
+	SourceASC->SetLastRevealedHiderCount(0);
 
 	const AHideAndSeekGameMode* GameMode = World->GetAuthGameMode<AHideAndSeekGameMode>();
 
@@ -163,6 +165,8 @@ EStateTreeRunStatus FStateTreeRevealNearbyHidersTask::EnterState(
 				2.0f);
 		}
 	}
+	
+	SourceASC->SetLastRevealedHiderCount(Data.RevealedCount);
 
 	UE_LOG(LogHiderReveal, Log, TEXT("%s: Reveal finished. Radius=%.0f, Revealed=%d, Failed=%d."),
 	       *GetNameSafe(Source),

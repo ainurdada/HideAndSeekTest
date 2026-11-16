@@ -177,6 +177,11 @@ void UHiderAbilitySystemComponent::DebugApplyRevealMarker()
 	ApplyRevealMarker();
 }
 
+void UHiderAbilitySystemComponent::SetLastRevealedHiderCount(int32 Count)
+{
+	LastRevealedHiderCount = FMath::Max(0, Count);
+}
+
 void UHiderAbilitySystemComponent::OnRevealMarkerChanged(const FGameplayTag Tag, int32 NewCount)
 {
 	UE_LOG(LogHiderASC, Log, TEXT("%s: %s Count=%d"),

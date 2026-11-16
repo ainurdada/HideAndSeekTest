@@ -29,6 +29,14 @@ public:
 
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "HideAndSeek|Debug")
 	void DebugApplyRevealMarker();
+	
+	void SetLastRevealedHiderCount(int32 Count);
+
+	UFUNCTION(BlueprintPure, Category = "HideAndSeek|Reveal")
+	int32 GetLastRevealedHiderCount() const
+	{
+		return LastRevealedHiderCount;
+	}
 
 	UPROPERTY(BlueprintAssignable, Category = "HideAndSeek|Reveal")
 	FOnHiderRevealMarkerVisibilityChanged OnRevealMarkerVisibilityChanged;
@@ -43,4 +51,7 @@ private:
 
 	void OnRevealMarkerChanged(const FGameplayTag Tag, int32 NewCount);
 	void LogStatus(const TCHAR* Reason) const;
+	
+	UPROPERTY(VisibleInstanceOnly, Transient, Category = "HideAndSeek|Reveal")
+	int32 LastRevealedHiderCount = 0;
 };
