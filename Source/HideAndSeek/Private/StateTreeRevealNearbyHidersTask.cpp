@@ -55,7 +55,23 @@ EStateTreeRunStatus FStateTreeRevealNearbyHidersTask::EnterState(
 
 	const AHideAndSeekGameMode* GameMode = World->GetAuthGameMode<AHideAndSeekGameMode>();
 
-	if (!IsValid(GameMode) || GameMode->GetRoundPhase() != EHideAndSeekRoundPhase::Searching)
+	if (!IsValid(GameMode))
+	{
+		UE_LOG(LogHiderReveal, Error, TEXT("%s: Reveal requires HideAndSeekGameMode."),
+		       *GetNameSafe(Source));
+
+		return EStateTreeRunStatus::Failed;
+	}
+
+	if (GameMode->GetRoundPhase() == EHideAndSeekRoundPhase::Finished)
+	{
+		UE_LOG(LogHiderReveal, Log, TEXT("%s: Reveal skipped: round already finished."),
+		       *GetNameSafe(Source));
+
+		return EStateTreeRunStatus::Succeeded;
+	}
+
+	if (GameMode->GetRoundPhase() != EHideAndSeekRoundPhase::Searching)
 	{
 		UE_LOG(LogHiderReveal, Error, TEXT("%s: Reveal requires the Searching phase."),
 		       *GetNameSafe(Source));

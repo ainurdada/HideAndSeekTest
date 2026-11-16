@@ -12,7 +12,8 @@ enum class EHideAndSeekRoundPhase : uint8
 {
 	WaitingToStart,
 	Hiding,
-	Searching
+	Searching,
+	Finished
 };
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHideAndSeekRoundPhaseChanged, EHideAndSeekRoundPhase, EHideAndSeekRoundPhase);
@@ -36,6 +37,20 @@ public:
 	UFUNCTION(BlueprintPure, Category = "HideAndSeek|Round")
 	float GetHidingTimeRemaining() const;
 
+	bool NotifyHiderFound(AActor* Hider);
+
+	UFUNCTION(BlueprintPure, Category = "HideAndSeek|Round")
+	int32 GetTotalHiderCount() const
+	{
+		return RoundHiders.Num();
+	}
+
+	UFUNCTION(BlueprintPure, Category = "HideAndSeek|Round")
+	int32 GetFoundHiderCount() const
+	{
+		return FoundHiders.Num();
+	}
+
 	FOnHideAndSeekRoundPhaseChanged OnRoundPhaseChanged;
 
 protected:
@@ -55,10 +70,15 @@ private:
 	void StartSearching();
 	void SetRoundPhase(EHideAndSeekRoundPhase NewPhase);
 	void RefreshRoundDebug();
-	
+
+	bool CollectRoundHiders();
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "HideAndSeek|Round", meta=(AllowPrivateAccess="true"))
 	EHideAndSeekRoundPhase RoundPhase = EHideAndSeekRoundPhase::WaitingToStart;
-	
+
 	FTimerHandle HidingTimer;
 	FTimerHandle DebugTimer;
+
+	TSet<TWeakObjectPtr<AActor>> RoundHiders;
+	TSet<TWeakObjectPtr<AActor>> FoundHiders;
 };

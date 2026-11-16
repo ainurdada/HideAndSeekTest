@@ -7,6 +7,9 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "UObject/Class.h"
+#include "EngineUtils.h"
+#include "GameFramework/Pawn.h"
+#include "HiderAbilitySystemComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogHideAndSeekRound, Log, All);
 
@@ -28,6 +31,11 @@ void AHideAndSeekGameMode::StartPlay()
 		(bShowRoundDebug && (!FMath::IsFinite(DebugRefreshInterval) || DebugRefreshInterval <= 0.0f)))
 	{
 		UE_LOG(LogHideAndSeekRound, Error, TEXT("Round settings contain an invalid duration."));
+		return;
+	}
+
+	if (!CollectRoundHiders())
+	{
 		return;
 	}
 
@@ -59,6 +67,70 @@ float AHideAndSeekGameMode::GetHidingTimeRemaining() const
 	}
 
 	return FMath::Max(0.0f, GetWorldTimerManager().GetTimerRemaining(HidingTimer));
+}
+
+bool AHideAndSeekGameMode::NotifyHiderFound(AActor* Hider)
+{
+	if (!IsValid(Hider))
+	{
+		UE_LOG(LogHideAndSeekRound, Error, TEXT("Found notification requires a valid hider."));
+
+		return false;
+	}
+
+	const TWeakObjectPtr<AActor> HiderKey(Hider);
+
+	if (!RoundHiders.Contains(HiderKey))
+	{
+		UE_LOG(LogHideAndSeekRound, Error, TEXT("%s: Found notification rejected: not in the round roster."),
+		       *GetNameSafe(Hider));
+
+		return false;
+	}
+
+	const UHiderAbilitySystemComponent* AbilitySystem = Hider->FindComponentByClass<UHiderAbilitySystemComponent>();
+
+	if (!IsValid(AbilitySystem) || !AbilitySystem->IsFound())
+	{
+		UE_LOG(LogHideAndSeekRound, Error, TEXT("%s: Found notification requires the Found status."),
+		       *GetNameSafe(Hider));
+
+		return false;
+	}
+
+	if (FoundHiders.Contains(HiderKey))
+	{
+		UE_LOG(LogHideAndSeekRound, Log, TEXT("%s: Duplicate Found notification ignored."),
+		       *GetNameSafe(Hider));
+
+		return true;
+	}
+
+	if (RoundPhase != EHideAndSeekRoundPhase::Searching)
+	{
+		UE_LOG(LogHideAndSeekRound, Error, TEXT("%s: New Found notification requires Searching."),
+		       *GetNameSafe(Hider));
+
+		return false;
+	}
+
+	FoundHiders.Add(HiderKey);
+
+	UE_LOG(LogHideAndSeekRound, Log, TEXT("Found %d/%d: %s."),
+	       FoundHiders.Num(),
+	       RoundHiders.Num(),
+	       *GetNameSafe(Hider));
+
+	if (FoundHiders.Num() == RoundHiders.Num())
+	{
+		SetRoundPhase(EHideAndSeekRoundPhase::Finished);
+	}
+	else
+	{
+		RefreshRoundDebug();
+	}
+
+	return true;
 }
 
 void AHideAndSeekGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -121,11 +193,73 @@ void AHideAndSeekGameMode::RefreshRoundDebug()
 		break;
 
 	case EHideAndSeekRoundPhase::Searching:
-		Message = TEXT("HNS | Searching");
+		Message = FString::Printf(
+			TEXT("HNS | Searching | Found: %d/%d"),
+			GetFoundHiderCount(),
+			GetTotalHiderCount());
+
 		Color = FColor::Green;
+		break;
+
+	case EHideAndSeekRoundPhase::Finished:
+		Message = FString::Printf(
+			TEXT("HNS | Finished | All hiders found! (%d/%d)"),
+			GetFoundHiderCount(),
+			GetTotalHiderCount());
+
+		Color = FColor::Cyan;
 		break;
 	}
 
 	GEngine->AddOnScreenDebugMessage(static_cast<uint64>(GetUniqueID()), DebugRefreshInterval * 2.0f,
 	                                 Color, Message);
+}
+
+bool AHideAndSeekGameMode::CollectRoundHiders()
+{
+	RoundHiders.Reset();
+	FoundHiders.Reset();
+
+	for (TActorIterator<APawn> It(GetWorld()); It; ++It)
+	{
+		APawn* Pawn = *It;
+
+		if (!IsValid(Pawn) || Pawn->IsPlayerControlled())
+		{
+			continue;
+		}
+
+		const UHiderAbilitySystemComponent* AbilitySystem = Pawn->FindComponentByClass<UHiderAbilitySystemComponent>();
+
+		if (!IsValid(AbilitySystem))
+		{
+			continue;
+		}
+
+		if (AbilitySystem->IsFound())
+		{
+			UE_LOG(LogHideAndSeekRound, Error, TEXT("%s: Cannot start a round with an already Found hider."),
+			       *GetNameSafe(Pawn));
+
+			RoundHiders.Reset();
+			return false;
+		}
+
+		RoundHiders.Add(TWeakObjectPtr<AActor>(Pawn));
+
+		UE_LOG(LogHideAndSeekRound, Log, TEXT("Registered hider: %s."),
+		       *GetNameSafe(Pawn));
+	}
+
+	if (RoundHiders.Num() == 0)
+	{
+		UE_LOG(LogHideAndSeekRound, Error, TEXT("Cannot start round: no hiders registered."));
+
+		return false;
+	}
+
+	UE_LOG(LogHideAndSeekRound, Log, TEXT("Round roster ready: %d hiders."),
+	       RoundHiders.Num());
+
+	return true;
 }

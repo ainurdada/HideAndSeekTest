@@ -18,10 +18,15 @@ namespace
 			return true;
 
 		case EHideAndSeekRoundPhase::Hiding:
-			return CurrentPhase == EHideAndSeekRoundPhase::Hiding || CurrentPhase == EHideAndSeekRoundPhase::Searching;
+			return CurrentPhase == EHideAndSeekRoundPhase::Hiding || CurrentPhase == EHideAndSeekRoundPhase::Searching
+				|| CurrentPhase == EHideAndSeekRoundPhase::Finished;
 
 		case EHideAndSeekRoundPhase::Searching:
-			return CurrentPhase == EHideAndSeekRoundPhase::Searching;
+			return CurrentPhase == EHideAndSeekRoundPhase::Searching
+				|| CurrentPhase == EHideAndSeekRoundPhase::Finished;
+
+		case EHideAndSeekRoundPhase::Finished:
+			return CurrentPhase == EHideAndSeekRoundPhase::Finished;
 
 		default:
 			return false;

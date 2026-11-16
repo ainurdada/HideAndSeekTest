@@ -4,6 +4,8 @@
 #include "HiderAbilitySystemComponent.h"
 #include "HideAndSeekGameplayTags.h"
 #include "StateTreeExecutionContext.h"
+#include "Engine/World.h"
+#include "HideAndSeekGameMode.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogHiderStatusTask, Log, All);
 
@@ -50,7 +52,24 @@ EStateTreeRunStatus FStateTreeHiderStatusTask::EnterState(FStateTreeExecutionCon
 	}
 	else if (Data.StatusTag == TAG_HNS_Status_Found)
 	{
+		UWorld* World = Actor->GetWorld();
+
+		AHideAndSeekGameMode* GameMode = World ? World->GetAuthGameMode<AHideAndSeekGameMode>() : nullptr;
+
+		if (!IsValid(GameMode))
+		{
+			UE_LOG(LogHiderStatusTask, Error, TEXT("%s: Found status requires HideAndSeekGameMode."),
+			       *GetNameSafe(Actor));
+
+			return EStateTreeRunStatus::Failed;
+		}
+
 		Data.bStatusChanged = AbilitySystem->TryMarkFound();
+
+		if (Data.bStatusChanged && !GameMode->NotifyHiderFound(Actor))
+		{
+			return EStateTreeRunStatus::Failed;
+		}
 	}
 	else
 	{
