@@ -10,6 +10,9 @@
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
 #include "HiderAbilitySystemComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Misc/PackageName.h"
+#include "UObject/Package.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogHideAndSeekRound, Log, All);
 
@@ -133,6 +136,40 @@ bool AHideAndSeekGameMode::NotifyHiderFound(AActor* Hider)
 	return true;
 }
 
+void AHideAndSeekGameMode::RequestRestartRound()
+{
+	if (bRestartRequested)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+
+	if (!IsValid(World) || !World->IsGameWorld())
+	{
+		UE_LOG(LogHideAndSeekRound, Warning, TEXT("Restart requires a running game world."));
+
+		return;
+	}
+
+	const FString MapPackageName = UWorld::RemovePIEPrefix(World->GetPackage()->GetName());
+
+	if (MapPackageName.IsEmpty() || !FPackageName::DoesPackageExist(MapPackageName))
+	{
+		UE_LOG(LogHideAndSeekRound, Error, TEXT("Cannot restart: map package does not exist: %s."),
+		       *MapPackageName);
+
+		return;
+	}
+
+	bRestartRequested = true;
+
+	UE_LOG(LogHideAndSeekRound, Log, TEXT("Restart requested: %s."),
+	       *MapPackageName);
+
+	UGameplayStatics::OpenLevel(this, FName(*MapPackageName));
+}
+
 void AHideAndSeekGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorldTimerManager().ClearTimer(HidingTimer);
@@ -211,6 +248,8 @@ void AHideAndSeekGameMode::RefreshRoundDebug()
 		break;
 	}
 
+	Message += TEXT(" | R: Restart round");
+	
 	GEngine->AddOnScreenDebugMessage(static_cast<uint64>(GetUniqueID()), DebugRefreshInterval * 2.0f,
 	                                 Color, Message);
 }

@@ -50,6 +50,9 @@ public:
 	{
 		return FoundHiders.Num();
 	}
+	
+	UFUNCTION(BlueprintCallable, Category = "HideAndSeek|Round")
+	void RequestRestartRound();
 
 	FOnHideAndSeekRoundPhaseChanged OnRoundPhaseChanged;
 
@@ -81,4 +84,6 @@ private:
 
 	TSet<TWeakObjectPtr<AActor>> RoundHiders;
 	TSet<TWeakObjectPtr<AActor>> FoundHiders;
+	
+	bool bRestartRequested = false;
 };
