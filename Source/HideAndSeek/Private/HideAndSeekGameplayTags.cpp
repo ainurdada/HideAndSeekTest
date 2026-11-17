@@ -2,6 +2,7 @@
 
 UE_DEFINE_GAMEPLAY_TAG(TAG_HNS_FoundByPlayer, "HideAndSeek.Event.FoundByPlayer");
 UE_DEFINE_GAMEPLAY_TAG(TAG_HNS_Revealed, "HideAndSeek.Event.Revealed");
+UE_DEFINE_GAMEPLAY_TAG(TAG_HNS_CoverLost, "HideAndSeek.Event.CoverLost");
 
 UE_DEFINE_GAMEPLAY_TAG(TAG_HNS_Status_Unfound, "HideAndSeek.Status.Unfound");
 UE_DEFINE_GAMEPLAY_TAG(TAG_HNS_Status_Hidden, "HideAndSeek.Status.Hidden");

@@ -51,12 +51,18 @@ public:
 	{
 		return FoundHiders.Num();
 	}
+
+	UFUNCTION(BlueprintPure, Category = "HideAndSeek|Round")
+	bool ShouldLockPlayerWhileHiding() const
+	{
+		return bShouldLockPlayerWhileHiding;
+	}
 	
 	UFUNCTION(BlueprintCallable, Category = "HideAndSeek|Round")
 	void RequestRestartRound();
 
 	FOnHideAndSeekRoundPhaseChanged OnRoundPhaseChanged;
-	
+
 	UPROPERTY(BlueprintAssignable, Category = "HideAndSeek|Round")
 	FOnHideAndSeekRoundPresentationChanged OnRoundPresentationChanged;
 
@@ -70,8 +76,11 @@ protected:
 	bool bShowRoundDebug = true;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HideAndSeek|Debug",
-		meta = (ClampMin = "0.05", Units = "s"))
+		meta = (ClampMin = 0.05f, Units = "s"))
 	float DebugRefreshInterval = 0.2f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HideAndSeek|Round")
+	bool bShouldLockPlayerWhileHiding = true;
 
 private:
 	void StartSearching();
@@ -88,6 +97,6 @@ private:
 
 	TSet<TWeakObjectPtr<AActor>> RoundHiders;
 	TSet<TWeakObjectPtr<AActor>> FoundHiders;
-	
+
 	bool bRestartRequested = false;
 };
